@@ -3,7 +3,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 
-public class BotService(TelegramBotClient botClient, AiService ai, MessageStore store, string? adminChatId, HttpClient ogHttpClient, ImageSearchService imageSearch, TranscriptionService transcription)
+public class BotService(TelegramBotClient botClient, AiService ai, MessageStore store, string? adminChatId, HttpClient ogHttpClient, ImageSearchService imageSearch, TranscriptionService transcription, SaveBotService saveBot)
 {
     const string VoteQuestion = "Коли збираємось?";
 
@@ -209,6 +209,12 @@ public class BotService(TelegramBotClient botClient, AiService ai, MessageStore 
             if (messageText == null)
                 return;
 
+            if (!isCommand && !messageText.StartsWith('/') && !saveBot.TryEnqueue(update.Message))
+                await bot.SendMessage(chatId, "I’m downloading a few posts right now. Try again in a moment.",
+                    replyParameters: replyParams,
+                    messageThreadId: update.Message.IsTopicMessage == true ? update.Message.MessageThreadId : null,
+                    cancellationToken: cancellationToken);
+
             if (_rnd.Next(0, 600) == 0)
                 await bot.SendMessage(chatId, "Друже, ти дурачок?", replyParameters: replyParams, cancellationToken: cancellationToken);
 
@@ -231,7 +237,17 @@ public class BotService(TelegramBotClient botClient, AiService ai, MessageStore 
             if (mediaType != null)
                 return;
 
-            if (messageText.StartsWith("/підсумок_день") || messageText.StartsWith("/summary_day"))
+            if (messageText.Trim() is "/chatid" or "/chatid@revverb_bot")
+                await bot.SendMessage(chatId, $"Chat ID: {chatId}", replyParameters: replyParams,
+                    messageThreadId: update.Message.IsTopicMessage == true ? update.Message.MessageThreadId : null,
+                    cancellationToken: cancellationToken);
+            else if ((messageText.Trim() is "/start" or "/start@revverb_bot") && saveBot.Allows(update.Message))
+                await bot.SendMessage(chatId,
+                    "Send a public Instagram, Threads, TikTok, X, or Reddit link to save its media, or an AUTO.RIA listing link for a car preview.",
+                    replyParameters: replyParams,
+                    messageThreadId: update.Message.IsTopicMessage == true ? update.Message.MessageThreadId : null,
+                    cancellationToken: cancellationToken);
+            else if (messageText.StartsWith("/підсумок_день") || messageText.StartsWith("/summary_day"))
                 await HandleSummaryDay(bot, chatId, replyParams, cancellationToken);
             else if (messageText.StartsWith("/підсумок") || messageText.StartsWith("/summary"))
                 await HandleSummary(bot, chatId, messageText, replyParams, cancellationToken);

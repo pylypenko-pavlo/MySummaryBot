@@ -18,4 +18,13 @@ RUN dotnet publish "MySummaryBot.csproj" -c $BUILD_CONFIGURATION -o /app/publish
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=publish /app/publish .
+COPY SaveBotWorker/ /app/savebot/
+RUN if [ -f /app/savebot/source/requirements.txt ]; then \
+        apt-get update \
+        && apt-get install -y --no-install-recommends ca-certificates ffmpeg fonts-dejavu-core python3 python3-venv \
+        && rm -rf /var/lib/apt/lists/* \
+        && python3 -m venv /opt/savebot \
+        && /opt/savebot/bin/pip install --no-cache-dir -r /app/savebot/source/requirements.txt \
+        && /opt/savebot/bin/python -B -c "import sys; sys.path.insert(0, '/app/savebot'); import worker"; \
+    fi
 ENTRYPOINT ["dotnet", "MySummaryBot.dll"]
