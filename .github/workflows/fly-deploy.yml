@@ -12,6 +12,23 @@ jobs:
     concurrency: deploy-group
     steps:
       - uses: actions/checkout@v4
+      - name: Check for Save Bot build access
+        id: save_bot
+        env:
+          SAVE_BOT_READ_TOKEN: ${{ secrets.SAVE_BOT_READ_TOKEN }}
+        run: |
+          if [ -n "$SAVE_BOT_READ_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check out the private Save Bot worker
+        if: steps.save_bot.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: Theslamone/rvvrb-save-bot
+          ref: 20afe0e9c5a46ed7784671caa72fc7dbed90622e
+          path: MySummaryBot/SaveBotWorker/source
+          token: ${{ secrets.SAVE_BOT_READ_TOKEN }}
+          persist-credentials: false
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy
         working-directory: MySummaryBot

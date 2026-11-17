@@ -43,7 +43,8 @@ var transcription = new TranscriptionService(httpClient);
 try
 {
     var botClient = new TelegramBotClient(token);
-    var bot = new BotService(botClient, ai, store, adminChatId, ogHttpClient, imageSearch, transcription);
+    var saveBot = new SaveBotService(token);
+    var bot = new BotService(botClient, ai, store, adminChatId, ogHttpClient, imageSearch, transcription, saveBot);
     var cts = new CancellationTokenSource();
 
     void HandleStopSignal(PosixSignalContext ctx)
@@ -82,6 +83,7 @@ try
 
     var receivingTask = bot.RunReceivingLoop(cts.Token);
     var backgroundTask = bot.RunBackgroundLoop(cts.Token);
+    var saveBotTask = saveBot.RunAsync(cts.Token);
     Console.WriteLine("Bot запущено. Натисніть Ctrl+C для виходу.");
 
     await Task.WhenAny(receivingTask, backgroundTask);
@@ -89,7 +91,7 @@ try
     await bot.SendAdmin("Bot stopping: одна з задач завершилася сама");
     cts.Cancel();
 
-    await Task.WhenAll(receivingTask, backgroundTask);
+    await Task.WhenAll(receivingTask, backgroundTask, saveBotTask);
 }
 catch (Exception ex)
 {
