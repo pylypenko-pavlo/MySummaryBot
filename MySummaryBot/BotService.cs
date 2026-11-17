@@ -237,11 +237,11 @@ public class BotService(TelegramBotClient botClient, AiService ai, MessageStore 
             if (mediaType != null)
                 return;
 
-            if (messageText.Trim() is "/chatid" or "/chatid@revverb_bot")
+            if (messageText.Trim() is "/chatid" or "/chatid@revverb_bot" && update.Message.From?.Id.ToString() == adminChatId)
                 await bot.SendMessage(chatId, $"Chat ID: {chatId}", replyParameters: replyParams,
                     messageThreadId: update.Message.IsTopicMessage == true ? update.Message.MessageThreadId : null,
                     cancellationToken: cancellationToken);
-            else if ((messageText.Trim() is "/start" or "/start@revverb_bot") && saveBot.Allows(update.Message))
+            else if ((messageText.Trim() is "/start" or "/start@revverb_bot") && saveBot.Enabled)
                 await bot.SendMessage(chatId,
                     "Send a public Instagram, Threads, TikTok, X, or Reddit link to save its media, or an AUTO.RIA listing link for a car preview.",
                     replyParameters: replyParams,

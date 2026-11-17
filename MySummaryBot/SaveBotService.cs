@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -28,22 +27,15 @@ public sealed class SaveBotService(string botToken)
         "redd.it", "v.redd.it", "i.redd.it"
     };
 
-    readonly HashSet<long> groupIds = ReadIds("SAVE_BOT_GROUP_IDS");
-    readonly HashSet<long> privateIds = ReadIds("SAVE_BOT_PRIVATE_CHAT_IDS");
     readonly Channel<TelegramMessage> queue = Channel.CreateBounded<TelegramMessage>(
         new BoundedChannelOptions(QueueCapacity) { SingleReader = true });
 
-    public bool Allows(TelegramMessage message) => WorkerInstalled && (message.Chat.Type switch
-    {
-        ChatType.Group or ChatType.Supergroup => groupIds.Contains(message.Chat.Id),
-        ChatType.Private => privateIds.Contains(message.Chat.Id),
-        _ => false
-    });
+    public bool Enabled => WorkerInstalled;
 
     // Return false only when an eligible message could not be queued.
     public bool TryEnqueue(TelegramMessage message)
     {
-        if (!Allows(message))
+        if (!WorkerInstalled)
             return true;
 
         var text = message.Text ?? message.Caption;
@@ -66,11 +58,7 @@ public sealed class SaveBotService(string botToken)
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         if (!WorkerInstalled)
-        {
-            if (groupIds.Count > 0 || privateIds.Count > 0)
-                Console.Error.WriteLine("Save Bot is configured but its private worker was not bundled in this build.");
             return;
-        }
 
         try
         {
@@ -104,21 +92,6 @@ public sealed class SaveBotService(string botToken)
         return Uri.TryCreate(url.TrimEnd('.', ',', '!', '?', ')', ']', '}'), UriKind.Absolute, out var uri)
             && uri.Scheme is "http" or "https"
             && SupportedHosts.Contains(uri.Host);
-    }
-
-    static HashSet<long> ReadIds(string variable)
-    {
-        var ids = new HashSet<long>();
-        var values = Environment.GetEnvironmentVariable(variable)?.Split(
-            ',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) ?? [];
-        foreach (var value in values)
-        {
-            if (long.TryParse(value, CultureInfo.InvariantCulture, out var id))
-                ids.Add(id);
-            else
-                Console.Error.WriteLine($"Save Bot skipped an invalid chat ID in {variable}.");
-        }
-        return ids;
     }
 
     async Task RunWorkerAsync(TelegramMessage message, CancellationToken cancellationToken)
