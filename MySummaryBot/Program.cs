@@ -43,7 +43,7 @@ var transcription = new TranscriptionService(httpClient);
 try
 {
     var botClient = new TelegramBotClient(token);
-    var saveBot = new SaveBotService(token);
+    var saveBot = new SaveBotService(token, apiKey);
     var bot = new BotService(botClient, ai, store, adminChatId, ogHttpClient, imageSearch, transcription, saveBot);
     var cts = new CancellationTokenSource();
 

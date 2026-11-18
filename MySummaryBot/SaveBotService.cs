@@ -7,7 +7,7 @@ using Telegram.Bot.Types.Enums;
 using TelegramMessage = Telegram.Bot.Types.Message;
 using MessageEntity = Telegram.Bot.Types.MessageEntity;
 
-public sealed class SaveBotService(string botToken)
+public sealed class SaveBotService(string botToken, string openAiKey)
 {
     const int QueueCapacity = 4;
     const string Python = "/opt/savebot/bin/python";
@@ -113,6 +113,7 @@ public sealed class SaveBotService(string botToken)
             start.Environment.Clear();
             start.Environment["PATH"] = "/usr/local/bin:/usr/bin:/bin";
             start.Environment["TTOKEN"] = botToken;
+            start.Environment["OPENAI_API_KEY"] = openAiKey;
             start.Environment["TMPDIR"] = temp.FullName;
 
             using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start Save Bot.");
