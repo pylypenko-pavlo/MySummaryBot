@@ -1,6 +1,7 @@
 """Handle one link-bearing Telegram message from MySummaryBot."""
 
 import asyncio
+import dataclasses
 import json
 import os
 import sys
@@ -24,6 +25,7 @@ from aiogram.types import Message, Update
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "source"))
 
+import app.main
 from app.config import Settings
 from app.main import make_router
 
@@ -79,6 +81,16 @@ class TranslateMiddleware(BaseRequestMiddleware):
         return await make_request(bot, method)
 
 
+send_listing = app.main.send_auto_ria_listing
+
+
+async def send_translated_listing(bot, message, listing, photos):
+    # Listing previews go out as rich messages with the description drawn on a slide, out of the middleware's reach.
+    if listing.description:
+        listing = dataclasses.replace(listing, description=await translate(listing.description))
+    await send_listing(bot, message, listing, photos)
+
+
 async def handle_message(bot: Bot, message: Message) -> None:
     chat_ids = frozenset({message.chat.id})
     settings = Settings(
@@ -97,6 +109,7 @@ async def main() -> None:
     message = Message.model_validate(json.load(sys.stdin))
     async with Bot(os.environ.pop("TTOKEN")) as bot:
         bot.session.middleware(TranslateMiddleware())
+        app.main.send_auto_ria_listing = send_translated_listing
         await handle_message(bot, message)
 
 
