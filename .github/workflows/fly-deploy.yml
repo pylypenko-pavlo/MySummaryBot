@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Theslamone/rvvrb-save-bot
-          ref: 67eed8b2e588d116eaaef97deb658f16dabf1a3a
+          ref: f2f254680a8fc14ff4db4eaf8d35946438da2dd2
           path: MySummaryBot/SaveBotWorker/source
           token: ${{ secrets.SAVE_BOT_READ_TOKEN }}
           persist-credentials: false
