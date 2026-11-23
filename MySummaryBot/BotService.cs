@@ -243,7 +243,7 @@ public class BotService(TelegramBotClient botClient, AiService ai, MessageStore 
                     cancellationToken: cancellationToken);
             else if ((messageText.Trim() is "/start" or "/start@revverb_bot") && saveBot.Enabled)
                 await bot.SendMessage(chatId,
-                    "Send a public Instagram, Threads, TikTok, X, or Reddit link to save its media, or an AUTO.RIA listing link for a car preview.",
+                    "Send a public Instagram, Threads, TikTok, X, or Reddit link to save its media, or an AUTO.RIA, OLX, or Otomoto car listing link for a preview.",
                     replyParameters: replyParams,
                     messageThreadId: update.Message.IsTopicMessage == true ? update.Message.MessageThreadId : null,
                     cancellationToken: cancellationToken);

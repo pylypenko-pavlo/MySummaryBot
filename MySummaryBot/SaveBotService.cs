@@ -19,6 +19,8 @@ public sealed class SaveBotService(string botToken, string openAiKey)
     static readonly HashSet<string> SupportedHosts = new(StringComparer.OrdinalIgnoreCase)
     {
         "auto.ria.com", "www.auto.ria.com",
+        "otomoto.pl", "www.otomoto.pl", "m.otomoto.pl",
+        "olx.pl", "www.olx.pl", "m.olx.pl",
         "instagram.com", "www.instagram.com", "m.instagram.com",
         "threads.com", "www.threads.com", "threads.net", "www.threads.net",
         "x.com", "www.x.com", "twitter.com", "www.twitter.com", "mobile.twitter.com",
